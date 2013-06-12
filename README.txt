@@ -58,3 +58,4 @@ gst-launch -e mmssrc location=$U ! asfdemux name=demux  demux.audio_00  ! multiq
 gst-launch -e mmssrc location=$U ! asfdemux name=demux  demux.audio_00  ! multiqueue ! ffdec_wmav2  ! audioresample    ! audio/x-raw-int,rate=6000,channels=2  !  audioconvert ! audio/x-raw-int rate=6000,channels=1  ! flacenc ! filesink location=z
 
 gst-launch -e mmssrc location=$U ! asfdemux name=demux  demux.audio_00  ! multiqueue ! ffdec_wmav2  ! audioresample    ! audio/x-raw-int,rate=16000,channels=2  !  audioconvert ! audio/x-raw-int,rate=16000,channels=1  ! flacenc ! filesink location=/tmp/z
+export U="mms://wmlive-acl.bbc.co.uk/wms/bbc_ami/radio4/radio4_bb_live_eq1_sl1?BBC-UID=743f7d2b70f86c6814c7231b812545a243f9ae4c10900184a4dfd476c840ce2a&amp;SSO2-UID="

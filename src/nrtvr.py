@@ -30,7 +30,7 @@ STREAMS = {
 
 PIPELINES = {
     'mms' : ('location', 'mmssrc location=LOC name=feed_name ! asfdemux name=demux demux.audio_00 ! multiqueue ! ffdec_wmav2 ! audioresample ! audio/x-raw-int,rate=16000,channels=2 ! audioconvert ! audio/x-raw-int,rate=16000,channels=1'),
-    'parec' : ('device', 'pulsesrc device=N name=feed_name'),
+    'parec' : ('device', 'pulsesrc device=N name=feed_name ! audio/x-raw-int,rate=16000'),
     }
     
 

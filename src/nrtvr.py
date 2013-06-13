@@ -28,8 +28,8 @@ STREAMS = {
     }
 
 PIPELINES = {
-    'mms' : ('location', 'mmssrc location=LOC name=feed_name ! asfdemux name=demux demux.audio_00 ! multiqueue ! ffdec_wmav2 ! audioresample ! audio/x-raw-int,rate=16000,channels=2 ! audioconvert ! audio/x-raw-int,rate=16000,channels=1'),
-    'parec' : ('device', 'pulsesrc device=N name=feed_name ! audio/x-raw-int,rate=16000'),
+    'mms' : ('location', 'mmssrc location=LOC name=el_feed ! asfdemux name=demux demux.audio_00 ! multiqueue ! ffdec_wmav2 ! audioresample ! audio/x-raw-int,rate=16000,channels=2 ! audioconvert ! audio/x-raw-int,rate=16000,channels=1'),
+    'parec' : ('device', 'pulsesrc device=N name=el_feed ! audio/x-raw-int,rate=16000'),
     }
     
 
@@ -48,7 +48,7 @@ class Feed(object):
 
     def terminate(self):
 	self.terminating = True
-	self.feed_src.send_event(gst.event_new_eos())
+	self.el_feed.send_event(gst.event_new_eos())
 	
 	
 
@@ -62,14 +62,14 @@ class Feed(object):
 	    prop_arg, feed = PIPELINES[feed_type]
 	except KeyError, e:
 	    raise KeyError('Unknown feed_type: %s in stream: %s' % (feed_type, name))
-	p = '%s ! level name=level_name message=true interval=1000000000 ! flacenc ! filesink  location=sink.flac name=sink_name' %  feed
+	p = '%s ! level name=el_level message=true interval=1000000000 ! flacenc ! filesink  location=sink.flac name=el_sink' %  feed
 	log.debug('pipeline: %s', p)
         self.feeder = gst.parse_launch(p)
-	self.feed_src = self.feeder.get_by_name('feed_name')
-	self.feed_src .set_property(prop_arg, arg)
-	self.sink_name = self.feeder.get_by_name('sink_name')
-	self.sink_name.set_property('location', self.current_sink_filename)
-	self.level_el = self.feeder.get_by_name('level_el')
+	self.el_feed = self.feeder.get_by_name('el_feed')
+	self.el_feed .set_property(prop_arg, arg)
+	self.el_sink = self.feeder.get_by_name('el_sink')
+	self.el_sink.set_property('location', self.current_sink_filename)
+	self.el_level = self.feeder.get_by_name('el_level')
 	bus = self.feeder.get_bus()
         bus.add_watch(self._on_message)
 	self.feeder.set_state(gst.STATE_PLAYING)        

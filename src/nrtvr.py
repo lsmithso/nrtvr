@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # TODO:
-# Name all element as el_xxxx
 # dest dfilename rotation
 # Add silence detect level message=true interval=5000000000 
-# Y
-import sys, os
+import sys, os, time
 import gobject
 import dbus
 import dbus.service
@@ -33,11 +31,40 @@ PIPELINES = {
     }
     
 
+
+class FileName(object):
+    def __init__(self, dir_name):
+	self.dir_name = dir
+	self.index = 0
+	self.fname = None
+
+    def next(self):
+	self.fname = 'rip_%04d.flac' % self.index
+	self.index += 1
+	return self.fname
+    
+
+class GapTimer(object):
+    def __init__(self, feeder, max_recording, gap_level):
+	self.feeder = feeder
+	self.max_recording = max_recording
+	self.gap_level = gap_level
+	self.last_gap = time.time()
+
+    def level_msg(self, msg):
+	# TODO: check level if after min time. 
+	now = time.time()
+	if now > self.last_gap:
+	    self.feeder.swith_file()
+	    self.last_gap = now
+    
+	
+
 class Feed(object):
 
     def __init__(self, src_name):
-	self.current_sink_filename = '/tmp/x.flac'
 	self.terminating = False
+	self.file_namer = FileName('.')
 	self.build_pipeline(src_name)
 
     def play(self):
@@ -49,6 +76,10 @@ class Feed(object):
     def terminate(self):
 	self.terminating = True
 	self.el_feed.send_event(gst.event_new_eos())
+
+    def file_switcher(self):
+	# Rename - next_seg?
+	pass
 	
 	
 
@@ -68,7 +99,7 @@ class Feed(object):
 	self.el_feed = self.feeder.get_by_name('el_feed')
 	self.el_feed .set_property(prop_arg, arg)
 	self.el_sink = self.feeder.get_by_name('el_sink')
-	self.el_sink.set_property('location', self.current_sink_filename)
+	self.el_sink.set_property('location', self.file_namer.next())
 	self.el_level = self.feeder.get_by_name('el_level')
 	bus = self.feeder.get_bus()
         bus.add_watch(self._on_message)

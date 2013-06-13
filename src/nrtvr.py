@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # TODO:
-
-# Find out why mic recording doesn't work
+# Name all element as el_xxxx
 # dest dfilename rotation
-# Add silence detect
-
+# Add silence detect level message=true interval=5000000000 
+# Y
 import sys, os
 import gobject
 import dbus
@@ -63,13 +62,14 @@ class Feed(object):
 	    prop_arg, feed = PIPELINES[feed_type]
 	except KeyError, e:
 	    raise KeyError('Unknown feed_type: %s in stream: %s' % (feed_type, name))
-	p = '%s ! flacenc ! filesink  location=sink.flac name=sink_name' %  feed
+	p = '%s ! level name=level_name message=true interval=1000000000 ! flacenc ! filesink  location=sink.flac name=sink_name' %  feed
 	log.debug('pipeline: %s', p)
         self.feeder = gst.parse_launch(p)
 	self.feed_src = self.feeder.get_by_name('feed_name')
 	self.feed_src .set_property(prop_arg, arg)
 	self.sink_name = self.feeder.get_by_name('sink_name')
 	self.sink_name.set_property('location', self.current_sink_filename)
+	self.level_el = self.feeder.get_by_name('level_el')
 	bus = self.feeder.get_bus()
         bus.add_watch(self._on_message)
 	self.feeder.set_state(gst.STATE_PLAYING)        
@@ -79,10 +79,15 @@ class Feed(object):
 	
 
     def _on_message(self, bus, message):
-	print message.type, 'xxxx', message
+	#	print message.type, 'xxxx', message
 	if message.type == gst.MESSAGE_EOS:
 	    if self.terminating:
 		sys.exit(0)
+	elif message.type == gst.MESSAGE_ELEMENT:
+	    # and message.structure.has_key('level']:
+	    peak = message.structure['peak'][0]
+	    if peak < -40:
+		print int(peak)
 	return gst.BUS_PASS
 	    
 

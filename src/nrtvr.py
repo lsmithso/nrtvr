@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # TODO:
+
 # Find out why mic recording doesn't work
-# Add EOS on signal term
 # dest dfilename rotation
 # Add silence detect
 
@@ -38,6 +38,7 @@ class Feed(object):
 
     def __init__(self, src_name):
 	self.current_sink_filename = '/tmp/x.flac'
+	self.terminating = False
 	self.build_pipeline(src_name)
 
     def play(self):
@@ -45,6 +46,12 @@ class Feed(object):
 
     def pause(self):
 	pass
+
+    def terminate(self):
+	self.terminating = True
+	self.feed_src.send_event(gst.event_new_eos())
+	
+	
 
     def build_pipeline(self, src_name):
 	log.debug('Building pipeline for %s', src_name)
@@ -72,6 +79,10 @@ class Feed(object):
 	
 
     def _on_message(self, bus, message):
+	print message.type, 'xxxx', message
+	if message.type == gst.MESSAGE_EOS:
+	    if self.terminating:
+		sys.exit(0)
 	return gst.BUS_PASS
 	    
 
@@ -83,8 +94,11 @@ def main(src_name):
     feeder = Feed(src_name)
     mainloop = gobject.MainLoop()
     log.info('main loop running')
-    mainloop.run()
-
+    while True:
+	try:
+	    mainloop.run()
+	except KeyboardInterrupt, e:
+	    feeder.terminate()
 
 
 if __name__ == '__main__':

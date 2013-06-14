@@ -45,17 +45,19 @@ class FileName(object):
     
 
 class GapTimer(object):
-    def __init__(self, feeder, max_recording, gap_level):
+    MIN_TIME = 10.0
+    MAX_TIME = 10.0
+    
+    def __init__(self, feeder):
 	self.feeder = feeder
-	self.max_recording = max_recording
-	self.gap_level = gap_level
 	self.last_gap = time.time()
 
-    def level_msg(self, msg):
-	# TODO: check level if after min time. 
+    def level_msg(self, level):
+	peak = level['peak'][0]
 	now = time.time()
-	if now > self.last_gap:
-	    self.feeder.swith_file()
+	delta = now - self.last_gap
+	if delta > self.MAX_TIME:
+	    # self.feeder.next_file()
 	    self.last_gap = now
     
 	
@@ -64,6 +66,8 @@ class Feed(object):
 
     def __init__(self, src_name):
 	self.terminating = False
+	self.file_switching = False
+	self.gap_timer = GapTimer(self)
 	self.file_namer = FileName('.')
 	self.build_pipeline(src_name)
 
@@ -77,12 +81,20 @@ class Feed(object):
 	self.terminating = True
 	self.el_feed.send_event(gst.event_new_eos())
 
-    def file_switcher(self):
-	# Rename - next_seg?
-	pass
-	
-	
+    def next_file(self):
+	self.file_switching = True
+	self.el_feed.send_event(gst.event_new_eos())
 
+    def do_file_switch(self):
+	next_file = self.file_namer.next()
+	log.debug('next file: %s', next_file)
+	#	self.feeder.set_state(gst.STATE_NULL)
+        self.el_sink.set_state(gst.STATE_NULL)
+	self.el_sink.set_property('location', next_file)
+        self.el_sink.set_state(gst.STATE_PLAYING)
+        self.el_feeder.set_state(gst.STATE_PLAYING)
+	
+	
     def build_pipeline(self, src_name):
 	log.debug('Building pipeline for %s', src_name)
 	try:
@@ -110,15 +122,29 @@ class Feed(object):
 	
 
     def _on_message(self, bus, message):
-	#	print message.type, 'xxxx', message
-	if message.type == gst.MESSAGE_EOS:
+	if message.type == gst.MESSAGE_STATE_CHANGED:
+	    states = message.structure
+	    smap = {
+		gst.STATE_NULL : 'null',
+		gst.STATE_READY : 'ready',
+		gst.STATE_PLAYING : 'playing',
+		gst.STATE_PAUSED : 'paused',
+		gst.STATE_VOID_PENDING : 'void',
+		}
+	    def x(s): return smap.get(s, s)
+	    log.debug('state: %s-%s/%s/%s', message.src.get_name(), x(states['old-state']), x(states['new-state']), x(states['pending-state']))
+	elif message.type == gst.MESSAGE_EOS:
 	    if self.terminating:
 		sys.exit(0)
+	    elif self.file_switching:
+		self.do_file_switch()
+		self.file_switching = False
+		log.debug('file switch')
 	elif message.type == gst.MESSAGE_ELEMENT:
-	    # and message.structure.has_key('level']:
-	    peak = message.structure['peak'][0]
-	    if peak < -40:
-		print int(peak)
+	    if message.structure.has_key('peak'):
+		self.gap_timer.level_msg(message.structure)
+	else:
+	    log.debug( 'bus: %s/%s', message.type, message)
 	return gst.BUS_PASS
 	    
 

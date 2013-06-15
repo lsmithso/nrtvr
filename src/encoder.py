@@ -14,28 +14,43 @@ class FileName(object):
 	self.fname = None
 
     def next(self):
-	self.fname = 'rip_%04d.flac' % self.index
+	self.fname = 'rip_%04d.wav' % self.index
 	self.index += 1
 	return self.fname
 
 
-def signal_handler(signum, frame):
-    log.debug('signalled')
+
+
+class Encoder(object):
+
+    READ_BUFFER_SIZE = 8 * 1024
+
+
+    def __init__(self):
+	self.file_namer =FileName('/tmp')
+	self.fd = open(self.file_namer.next(), 'wb')
+	signal.signal(signal.SIGUSR1, self.signal_handler)
+	    
+
+    def signal_handler(self, signum, frame):
+	self.fd.close()
+	fname = self.file_namer.next()
+	log.debug('nnew file: %s', fname)
+	self.fd = open(fname, 'wb')
+	
+
+    def run(self):
+	while True:
+	    b = sys.stdin.read(self.READ_BUFFER_SIZE)
+	    if b:
+		log.debug('read %d', len(b))
+		self.fd.write(b)
+	    else:
+		log.debug('EOF - bye')
+		return
     
 
-def main():
-    log.debug('encoder starting')
-    signal.signal(signal.SIGUSR1,signal_handler)
-    fd = file('/tmp/test.wav', 'wb')
-    while True:
-	b = sys.stdin.read()
-	if b:
-	    log.debug('read %d bytes', len(b))
-	    fd.write(b)
-	else:
-	    log.debug('EOF - bye')
-	    sys.exit(0)
-    
 
 if __name__ == '__main__':
-    main()
+    e = Encoder()
+    e.run()

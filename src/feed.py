@@ -37,7 +37,7 @@ class EncoderParent(object):
 
     def spawn(self):
 	# FIXME: Path
-	self.p = subprocess.Popen('./encoder.py', bufsize = 8*1204, stdin = subprocess.PIPE)
+	self.p = subprocess.Popen('./encoder.py', bufsize = 0, stdin = subprocess.PIPE)
 	self.fd = self.p.stdin.fileno()
 	log.debug('spawned encoder: %s. fd: %s', self.p, self.fd)
 
@@ -48,7 +48,7 @@ class EncoderParent(object):
 	
 class GapTimer(object):
     MIN_TIME = 10.0
-    MAX_TIME = 5.0
+    MAX_TIME = 10.0
     
     def __init__(self, feeder):
 	self.feeder = feeder
@@ -82,7 +82,7 @@ class Feed(object):
 	self.terminating = True
 	self.el_feed.send_event(gst.event_new_eos())
 
-    def flush(self):
+    def flush(	self):
 	self.encoder.signal()
 	
 	

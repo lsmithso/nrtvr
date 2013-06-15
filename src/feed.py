@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # TODO:
-# dest dfilename rotation
-# Add silence detect level message=true interval=5000000000 
+# Add silence detect level message=true interval=5000000000
+# Find out why big pauses - add print when sending down each pipe
+# Get mic working
+# Log confidence
+# Set debug log from envvar
+#Fix raw/flac file  dir + cleanup
+#
 import sys, os, time, subprocess, signal
 import gobject
 import dbus
@@ -15,7 +20,7 @@ import logging
 
 logging.basicConfig()
 log = logging.getLogger('feed')
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 S_NAME = "uk.co.opennet.nrtvr-service"
 #RAW_AUDIO_CAP = 'audio/x-raw-int,rate=16000,channels=1,endianness=1234,width=32 ,depth=1,signed=true'
@@ -48,7 +53,7 @@ class EncoderParent(object):
 	
 class GapTimer(object):
     MIN_TIME = 10.0
-    MAX_TIME = 10.0
+    MAX_TIME = 15.0
     
     def __init__(self, feeder):
 	self.feeder = feeder

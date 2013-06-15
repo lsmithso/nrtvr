@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os, logging, signal
+import sys, os, logging, signal, subprocess
 import gobject
 import glib
 import pygst
@@ -9,7 +9,7 @@ import feed
 
 logging.basicConfig()
 log = logging.getLogger('enc')
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 FLAC_TEST = False
 
@@ -30,7 +30,8 @@ class FileName(object):
 
 class FlacEncode(object):
 
-    def __init__(self):
+    def __init__(self, vrs):
+	self.vrs = vrs
 	self.pipeline =  gst.parse_launch('filesrc name=el_src location=x ! %s ! flacenc ! filesink name=el_sink location=Y' %  feed.RAW_AUDIO_CAP)
 	self.el_src = self.pipeline.get_by_name('el_src')
 	self.el_sink = self.pipeline.get_by_name('el_sink')
@@ -41,7 +42,8 @@ class FlacEncode(object):
     def encode(self, name):
 	log.debug('new encode %s', name)
 	self.el_src.set_property('location', name)
-	self.el_sink.set_property('location', name + '.flac') # FIXME
+	self.encoded_filename =  name + '.flac' # FIXME
+	self.el_sink.set_property('location', self.encoded_filename)
 	self.pipeline.set_state(gst.STATE_PLAYING)
 
 	
@@ -60,7 +62,7 @@ class FlacEncode(object):
 	if message.type == gst.MESSAGE_EOS:
 	    log.debug('flac encode finished %s', message.src.get_name())
 	    self.pipeline.set_state(gst.STATE_READY)
-		
+	    self.vrs.vrs_send(self.encoded_filename)
 	    if FLAC_TEST: 
 		sys.exit(0)
 	return gst.BUS_PASS
@@ -72,7 +74,8 @@ class Encoder(object):
 
 
     def __init__(self):
-	self.flac = FlacEncode()
+	self.vrs_spawn()
+	self.flac = FlacEncode(self)
 	self.file_namer =FileName('/tmp')
 	self.fd = open(self.file_namer.next(), 'wb')
 	signal.signal(signal.SIGUSR1, self.signal_handler)
@@ -84,7 +87,7 @@ class Encoder(object):
 	fname = self.file_namer.next()
 	log.debug('nnew file: %s', fname)
 	self.fd = open(fname, 'wb')
-	self.flac = FlacEncode()
+	self.flac = FlacEncode(self)
 	self.flac.encode(old_name)
 	
 	
@@ -102,6 +105,15 @@ class Encoder(object):
 	    sys.exit(0)
 	return True
 
+    def vrs_spawn(self):
+	self.p = subprocess.Popen('./vrs.py', bufsize = 1, stdin = subprocess.PIPE)
+
+    def vrs_send(self, filename):
+	log.debug('vrs_send: %s', filename)
+	self.p.stdin.write('%s\n' % filename)
+	self.p.stdin.flush()#
+
+
 
 if __name__ == '__main__':
     e = Encoder()
@@ -109,7 +121,7 @@ if __name__ == '__main__':
     mainloop= gobject.MainLoop()
     if len(sys.argv) == 2:
 	FLAC_TEST = True
-	self.flac = FlacEncode()
+	self.flac = FlacEncode(self)
 	flac.encode(sys.argv[1])
     mainloop.run()
 

@@ -25,11 +25,13 @@ def signal_handler(signum, frame):
 
 def main():
     log.debug('encoder starting')
-    signal.signal(signal.SIGUSR1,signal_handler) 
+    signal.signal(signal.SIGUSR1,signal_handler)
+    fd = file('/tmp/test.wav', 'wb')
     while True:
 	b = sys.stdin.read()
 	if b:
 	    log.debug('read %d bytes', len(b))
+	    fd.write(b)
 	else:
 	    log.debug('EOF - bye')
 	    sys.exit(0)

@@ -37,7 +37,7 @@ class EncoderParent(object):
 
     def spawn(self):
 	# FIXME: Path
-	self.p = subprocess.Popen('./encoder.py', bufsize = 0, stdin = subprocess.PIPE)
+	self.p = subprocess.Popen('./encoder.py', bufsize = 8*1204, stdin = subprocess.PIPE)
 	self.fd = self.p.stdin.fileno()
 	log.debug('spawned encoder: %s. fd: %s', self.p, self.fd)
 
@@ -48,7 +48,7 @@ class EncoderParent(object):
 	
 class GapTimer(object):
     MIN_TIME = 10.0
-    MAX_TIME = 10.0
+    MAX_TIME = 5.0
     
     def __init__(self, feeder):
 	self.feeder = feeder
@@ -96,7 +96,7 @@ class Feed(object):
 	    prop_arg, feed = PIPELINES[feed_type]
 	except KeyError, e:
 	    raise KeyError('Unknown feed_type: %s in stream: %s' % (feed_type, name))
-	p = '%s ! level name=el_level message=true interval=1000000000 ! fdsink   name=el_sink' %  feed
+	p = '%s ! level name=el_level message=true interval=1000000000 ! wavenc ! fdsink   name=el_sink' %  feed
 	log.debug('pipeline: %s', p)
         self.feeder = gst.parse_launch(p)
 	self.el_feed = self.feeder.get_by_name('el_feed')

@@ -2,7 +2,7 @@
 # TODO:
 # dest dfilename rotation
 # Add silence detect level message=true interval=5000000000 
-import sys, os, time
+import sys, os, time, subprocess, signal
 import gobject
 import dbus
 import dbus.service
@@ -12,10 +12,10 @@ import pygst
 pygst.require("0.10")
 import gst
 import logging
-
+import encoder
 
 logging.basicConfig()
-log = logging.getLogger('nrtvr')
+log = logging.getLogger('feed')
 log.setLevel(logging.DEBUG)
 
 S_NAME = "uk.co.opennet.nrtvr-service"
@@ -32,18 +32,20 @@ PIPELINES = {
     
 
 
-class FileName(object):
-    def __init__(self, dir_name):
-	self.dir_name = dir
-	self.index = 0
-	self.fname = None
 
-    def next(self):
-	self.fname = 'rip_%04d.flac' % self.index
-	self.index += 1
-	return self.fname
-    
+class EncoderParent(object):
 
+    def spawn(self):
+	# FIXME: Path
+	self.p = subprocess.Popen('./encoder.py', bufsize = 0, stdin = subprocess.PIPE)
+	self.fd = self.p.stdin.fileno()
+	log.debug('spawned encoder: %s. fd: %s', self.p, self.fd)
+
+    def signal(self):
+	self.p.stdin.flush()
+	self.p.send_signal(signal.SIGUSR1)
+	
+	
 class GapTimer(object):
     MIN_TIME = 10.0
     MAX_TIME = 10.0
@@ -57,18 +59,17 @@ class GapTimer(object):
 	now = time.time()
 	delta = now - self.last_gap
 	if delta > self.MAX_TIME:
-	    self.feeder.next_file()
+	    self.feeder.flush()
 	    self.last_gap = now
     
 	
 
 class Feed(object):
 
-    def __init__(self, src_name):
+    def __init__(self, src_name, encoder):
 	self.terminating = False
-	self.file_switching = False
 	self.gap_timer = GapTimer(self)
-	self.file_namer = FileName('.')
+	self.encoder = encoder
 	self.build_pipeline(src_name)
 
     def play(self):
@@ -81,18 +82,8 @@ class Feed(object):
 	self.terminating = True
 	self.el_feed.send_event(gst.event_new_eos())
 
-    def next_file(self):
-	self.file_switching = True
-	self.el_feed.send_event(gst.event_new_eos())
-
-    def do_file_switch(self):
-	next_file = self.file_namer.next()
-	log.debug('next file: %s', next_file)
-        self.feeder.set_state(gst.STATE_NULL)
-        self.el_sink.set_state(gst.STATE_NULL)
-	self.el_sink.set_property('location', next_file)
-	self.feeder.set_state(gst.STATE_PLAYING)
-        self.feeder.set_state(gst.STATE_PLAYING)
+    def flush(self):
+	self.encoder.signal()
 	
 	
     def build_pipeline(self, src_name):
@@ -105,13 +96,13 @@ class Feed(object):
 	    prop_arg, feed = PIPELINES[feed_type]
 	except KeyError, e:
 	    raise KeyError('Unknown feed_type: %s in stream: %s' % (feed_type, name))
-	p = '%s ! level name=el_level message=true interval=1000000000 ! flacenc ! filesink  location=sink.flac name=el_sink' %  feed
+	p = '%s ! level name=el_level message=true interval=1000000000 ! fdsink   name=el_sink' %  feed
 	log.debug('pipeline: %s', p)
         self.feeder = gst.parse_launch(p)
 	self.el_feed = self.feeder.get_by_name('el_feed')
 	self.el_feed .set_property(prop_arg, arg)
 	self.el_sink = self.feeder.get_by_name('el_sink')
-	self.el_sink.set_property('location', self.file_namer.next())
+	self.el_sink.set_property('fd', self.encoder.fd)
 	self.el_level = self.feeder.get_by_name('el_level')
 	bus = self.feeder.get_bus()
         bus.add_watch(self._on_message)
@@ -136,10 +127,6 @@ class Feed(object):
 	elif message.type == gst.MESSAGE_EOS:
 	    if self.terminating:
 		sys.exit(0)
-	    elif self.file_switching:
-		self.do_file_switch()
-		self.file_switching = False
-		log.debug('file switch')
 	elif message.type == gst.MESSAGE_ELEMENT:
 	    if message.structure.has_key('peak'):
 		self.gap_timer.level_msg(message.structure)
@@ -153,7 +140,9 @@ def main(src_name):
     main_loop = dbus.mainloop.glib.DBusGMainLoop(set_as_default = True)
     session_bus = dbus.SessionBus()
     name = dbus.service.BusName(S_NAME, session_bus)
-    feeder = Feed(src_name)
+    encoder = EncoderParent()
+    encoder.spawn()
+    feeder = Feed(src_name, encoder)
     mainloop = gobject.MainLoop()
     log.info('main loop running')
     while True:

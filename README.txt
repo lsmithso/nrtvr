@@ -1,5 +1,16 @@
 * Near Real Time Voice Recognition
 
+** Notes
+GapTimer:
+Used to flush flac to disk + send message to vr client.
+Detects silence (gaps) using level 
+If doesnt record to disk.
+If non-silent, start recording, start timer
+If recording. record for min  10 secs, mac 20 secs (window)
+If silence in window, stop recording, flush.
+If end of window, stop recording.
+
+
 Uses gst to capture voice from mic, http or skype and pipes to Googles
 voice recognition API in real time. Results can be displayed in near
 real time for eg radio program transcriptions, skype calls etc. for
@@ -59,3 +70,52 @@ gst-launch -e mmssrc location=$U ! asfdemux name=demux  demux.audio_00  ! multiq
 
 gst-launch -e mmssrc location=$U ! asfdemux name=demux  demux.audio_00  ! multiqueue ! ffdec_wmav2  ! audioresample    ! audio/x-raw-int,rate=16000,channels=2  !  audioconvert ! audio/x-raw-int,rate=16000,channels=1  ! flacenc ! filesink location=/tmp/z
 export U="mms://wmlive-acl.bbc.co.uk/wms/bbc_ami/radio4/radio4_bb_live_eq1_sl1?BBC-UID=743f7d2b70f86c6814c7231b812545a243f9ae4c10900184a4dfd476c840ce2a&amp;SSO2-UID="
+
+
+00000000000000000000
+def bus_event(bus, message, *args):
+    peak = message.structure['peak'][0]
+    if peak < -50:
+        print 'silence on the cable! help!'
+    return True
+
+mainloop = gobject.MainLoop()
+
+s = 'gnomevfssrc location="http://local-stream:8000/local.ogg" ! '\
+      'oggdemux ! vorbisdec ! audioconvert ! '\
+      'level message=true interval=5000000000 ! fakesink'
+
+pipeline = gst.parse_launch(s)
+pipeline.get_bus().add_signal_watch()
+i = pipeline.get_bus().connect('message::element', bus_event)
+pipeline.set_state(gst.STATE_PLAYING)
+mainloop.run()
+
+
+cutter plugin?
+fdsink - open fd to write to?
+
+You can set the sink to READY then change the location.
+
+gst-inspect multifilesink
+
+
+* Plan B
+
+Since filesink can't change location on the fly: Open a pipe to a
+sub-process and write raw data to it via fdsink. When it time to
+change file location, send SIGUSE1. The child process reads stdin to
+get raw data till EOF, saving to a file as it does so. SIGUSE1 handler
+flushes data to file and closes it, then opens the next file etc. The
+signal also sends a message to the Google vr client to read the file,
+encode it and call the API.
+
+May be the child process can flac encode on the fly, via a gstreamer
+pipe. At SIGUSE1, it puts an eso eos on the stream and stops feeding
+data to it. Thus flushing the filesink. Or it flac encodes after the
+file switch. Or the Google api does it.
+
+Stage 1: Modify nrtv.py tp send data to subprocess via pipe. Make sire
+data written to file. Modify child process to pipe to audioplay tp
+make sure its gapless.
+

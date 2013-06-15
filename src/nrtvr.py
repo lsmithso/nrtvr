@@ -57,7 +57,7 @@ class GapTimer(object):
 	now = time.time()
 	delta = now - self.last_gap
 	if delta > self.MAX_TIME:
-	    # self.feeder.next_file()
+	    self.feeder.next_file()
 	    self.last_gap = now
     
 	
@@ -88,11 +88,11 @@ class Feed(object):
     def do_file_switch(self):
 	next_file = self.file_namer.next()
 	log.debug('next file: %s', next_file)
-	#	self.feeder.set_state(gst.STATE_NULL)
+        self.feeder.set_state(gst.STATE_NULL)
         self.el_sink.set_state(gst.STATE_NULL)
 	self.el_sink.set_property('location', next_file)
-        self.el_sink.set_state(gst.STATE_PLAYING)
-        self.el_feeder.set_state(gst.STATE_PLAYING)
+	self.feeder.set_state(gst.STATE_PLAYING)
+        self.feeder.set_state(gst.STATE_PLAYING)
 	
 	
     def build_pipeline(self, src_name):

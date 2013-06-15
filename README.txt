@@ -119,3 +119,34 @@ Stage 1: Modify nrtv.py tp send data to subprocess via pipe. Make sire
 data written to file. Modify child process to pipe to audioplay tp
 make sure its gapless.
 
+
+
+src//tmp/x.wav: RIFF (little-endian) data, WAVE audio, Microsoft PCM, 32 bit, mono 16000 Hz
+1ffmpeg -i /tmp/x.wav 
+ffmpeg version 0.7.6-4:0.7.6-0ubuntu0.11.10.3, Copyright (c) 2000-2011 the Libav developers
+  built on Jan 24 2013 19:25:26 with gcc 4.6.1
+  configuration: --extra-version='4:0.7.6-0ubuntu0.11.10.3' --arch=i386 --prefix=/usr --enable-vdpau --enable-bzlib --enable-libgsm --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-pthreads --enable-zlib --enable-libvpx --enable-runtime-cpudetect --enable-vaapi --enable-gpl --enable-postproc --enable-swscale --enable-x11grab --enable-libdc1394 --enable-shared --disable-static
+  WARNING: library configuration mismatch
+  avutil      configuration: --extra-version='4:0.7.6ubuntu0.11.10.3' --arch=i386 --prefix=/usr --enable-vdpau --enable-bzlib --enable-libgsm --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-pthreads --enable-zlib --enable-libvpx --enable-runtime-cpudetect --enable-vaapi --enable-libopenjpeg --enable-gpl --enable-postproc --enable-swscale --enable-x11grab --enable-libdirac --enable-libmp3lame --enable-librtmp --enable-libx264 --enable-libxvid --enable-libvo-aacenc --enable-version3 --enable-libvo-amrwbenc --enable-version3 --enable-libdc1394 --shlibdir=/usr/lib/i686/cmov --cpu=i686 --enable-shared --disable-static --disable-ffmpeg --disable-ffplay
+  avcodec     configuration: --extra-version='4:0.7.6ubuntu0.11.10.3' --arch=i386 --prefix=/usr --enable-vdpau --enable-bzlib --enable-libgsm --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-pthreads --enable-zlib --enable-libvpx --enable-runtime-cpudetect --enable-vaapi --enable-libopenjpeg --enable-gpl --enable-postproc --enable-swscale --enable-x11grab --enable-libdirac --enable-libmp3lame --enable-librtmp --enable-libx264 --enable-libxvid --enable-libvo-aacenc --enable-version3 --enable-libvo-amrwbenc --enable-version3 --enable-libdc1394 --shlibdir=/usr/lib/i686/cmov --cpu=i686 --enable-shared --disable-static --disable-ffmpeg --disable-ffplay
+  avformat    configuration: --extra-version='4:0.7.6-0ubuntu0.11.10.3' --arch=i386 --prefix=/usr --enable-vdpau --enable-bzlib --enable-libgsm --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-pthreads --enable-zlib --enable-libvpx --enable-runtime-cpudetect --enable-vaapi --enable-gpl --enable-postproc --enable-swscale --enable-x11grab --enable-libdc1394 --shlibdir=/usr/lib/i686/cmov --cpu=i686 --enable-shared --disable-static --disable-ffmpeg --disable-ffplay
+  avdevice    configuration: --extra-version='4:0.7.6-0ubuntu0.11.10.3' --arch=i386 --prefix=/usr --enable-vdpau --enable-bzlib --enable-libgsm --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-pthreads --enable-zlib --enable-libvpx --enable-runtime-cpudetect --enable-vaapi --enable-gpl --enable-postproc --enable-swscale --enable-x11grab --enable-libdc1394 --shlibdir=/usr/lib/i686/cmov --cpu=i686 --enable-shared --disable-static --disable-ffmpeg --disable-ffplay
+  avfilter    configuration: --extra-version='4:0.7.6-0ubuntu0.11.10.3' --arch=i386 --prefix=/usr --enable-vdpau --enable-bzlib --enable-libgsm --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-pthreads --enable-zlib --enable-libvpx --enable-runtime-cpudetect --enable-vaapi --enable-gpl --enable-postproc --enable-swscale --enable-x11grab --enable-libdc1394 --shlibdir=/usr/lib/i686/cmov --cpu=i686 --enable-shared --disable-static --disable-ffmpeg --disable-ffplay
+  swscale     configuration: --extra-version='4:0.7.6-0ubuntu0.11.10.3' --arch=i386 --prefix=/usr --enable-vdpau --enable-bzlib --enable-libgsm --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-pthreads --enable-zlib --enable-libvpx --enable-runtime-cpudetect --enable-vaapi --enable-gpl --enable-postproc --enable-swscale --enable-x11grab --enable-libdc1394 --shlibdir=/usr/lib/i686/cmov --cpu=i686 --enable-shared --disable-static --disable-ffmpeg --disable-ffplay
+  postproc    configuration: --extra-version='4:0.7.6-0ubuntu0.11.10.3' --arch=i386 --prefix=/usr --enable-vdpau --enable-bzlib --enable-libgsm --enable-libschroedinger --enable-libspeex --enable-libtheora --enable-libvorbis --enable-pthreads --enable-zlib --enable-libvpx --enable-runtime-cpudetect --enable-vaapi --enable-gpl --enable-postproc --enable-swscale --enable-x11grab --enable-libdc1394 --shlibdir=/usr/lib/i686/cmov --cpu=i686 --enable-shared --disable-static --disable-ffmpeg --disable-ffplay
+  libavutil    51.  7. 0 / 51.  7. 0
+  libavcodec   53.  6. 0 / 53.  6. 0
+  libavformat  53.  3. 0 / 53.  3. 0
+  libavdevice  53.  0. 0 / 53.  0. 0
+  libavfilter   2.  4. 0 /  2.  4. 0
+  libswscale    2.  0. 0 /  2.  0. 0
+  libpostproc  52.  0. 0 / 52.  0. 0
+[wav @ 0x84a4a40] max_analyze_duration reached
+Input #0, wav, from '/tmp/x.wav':
+  Duration: 09:19:13.40, bitrate: 0 kb/s
+    Stream #0.0: Audio: pcm_s32le, 16000 Hz, 1 channels, s32, 512 kb/s
+At least one output file must be specified
+1
+
+tmp/x.wav: RIFF (little-endian) data, WAVE audio, Microsoft PCM, 32 bit, mono 16000 Hz
+1

@@ -12,21 +12,21 @@ import pygst
 pygst.require("0.10")
 import gst
 import logging
-import encoder
 
 logging.basicConfig()
 log = logging.getLogger('feed')
 log.setLevel(logging.DEBUG)
 
 S_NAME = "uk.co.opennet.nrtvr-service"
-
+#RAW_AUDIO_CAP = 'audio/x-raw-int,rate=16000,channels=1,endianness=1234,width=32 ,depth=1,signed=true'
+RAW_AUDIO_CAP = 'audio/x-raw-int,rate=16000,channels=1,width=32,signed=true,endianness=1234,width=8'
 STREAMS = {
     'r4' : ('mms', 'mms://wmlive-acl.bbc.co.uk/wms/bbc_ami/radio4/radio4_bb_live_eq1_sl1?BBC-UID=743f7d2b70f86c6814c7231b812545a243f9ae4c10900184a4dfd476c840ce2a&amp;SSO2-UID='),
     'mic' : ('parec', '3'),
     }
 
 PIPELINES = {
-    'mms' : ('location', 'mmssrc location=LOC name=el_feed ! asfdemux name=demux demux.audio_00 ! multiqueue ! ffdec_wmav2 ! audioresample ! audio/x-raw-int,rate=16000,channels=2 ! audioconvert ! audio/x-raw-int,rate=16000,channels=1'),
+    'mms' : ('location', 'mmssrc location=LOC name=el_feed ! asfdemux name=demux demux.audio_00 ! multiqueue ! ffdec_wmav2 ! audioresample ! audio/x-raw-int,rate=16000,channels=2 '),
     'parec' : ('device', 'pulsesrc device=N name=el_feed ! audio/x-raw-int,rate=16000'),
     }
     
@@ -96,7 +96,7 @@ class Feed(object):
 	    prop_arg, feed = PIPELINES[feed_type]
 	except KeyError, e:
 	    raise KeyError('Unknown feed_type: %s in stream: %s' % (feed_type, name))
-	p = '%s ! level name=el_level message=true interval=1000000000 ! wavenc ! fdsink   name=el_sink' %  feed
+	p = '%s ! audioconvert ! %s ! level name=el_level message=true interval=1000000000 ! fdsink   name=el_sink' %  (feed, RAW_AUDIO_CAP)
 	log.debug('pipeline: %s', p)
         self.feeder = gst.parse_launch(p)
 	self.el_feed = self.feeder.get_by_name('el_feed')

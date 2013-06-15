@@ -5,6 +5,7 @@ import glib
 import pygst
 pygst.require("0.10")
 import gst
+import feed
 
 logging.basicConfig()
 log = logging.getLogger('enc')
@@ -30,7 +31,7 @@ class FileName(object):
 class FlacEncode(object):
 
     def __init__(self):
-	self.pipeline =  gst.parse_launch('filesrc name=el_src location=x ! wavparse ! audioconvert ! flacenc ! filesink name=el_sink location=Y')
+	self.pipeline =  gst.parse_launch('filesrc name=el_src location=x ! %s ! flacenc ! filesink name=el_sink location=Y' %  feed.RAW_AUDIO_CAP)
 	self.el_src = self.pipeline.get_by_name('el_src')
 	self.el_sink = self.pipeline.get_by_name('el_sink')
 	bus = self.pipeline.get_bus()

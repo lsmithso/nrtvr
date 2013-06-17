@@ -18,7 +18,8 @@ def main():
 	    flac=open(fname, "rb").read()                                                       
 	    header = {'Content-Type' : 'audio/x-flac; rate=16000'}
 	    try:
-		req = urllib2.Request(url, flac, header)                                                 
+		req = urllib2.Request(url, flac, header)
+		print 'vrs send'
 		data = json.loads(urllib2.urlopen(req).read()                                                              )
 		log.debug('vr data: %s', data)
 		if data['status'] == 0:
@@ -27,7 +28,7 @@ def main():
 		    log.debug('XXX %d: %s', hits, h[0]['utterance'])
 		    print '%d %s' % (hits, h[0]['utterance'])
 		else:
-		    print '<bad>'
+		    print '<%d>' % data['status']
 	    except urllib2.HTTPError, e:
 		log.error('url error: %s',  e)
 	else:

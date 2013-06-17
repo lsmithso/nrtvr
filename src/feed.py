@@ -49,11 +49,12 @@ class EncoderParent(object):
     def signal(self):
 	self.p.stdin.flush()
 	self.p.send_signal(signal.SIGUSR1)
+	print 'feed signalled'
 	
 	
 class GapTimer(object):
     MIN_TIME = 10.0
-    MAX_TIME = 15.0
+    MAX_TIME = 10.0
     
     def __init__(self, feeder):
 	self.feeder = feeder

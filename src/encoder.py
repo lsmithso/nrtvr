@@ -112,6 +112,7 @@ class Encoder(object):
 	log.debug('vrs_send: %s', filename)
 	self.p.stdin.write('%s\n' % filename)
 	self.p.stdin.flush()#
+	print 'encode send'
 
 
 

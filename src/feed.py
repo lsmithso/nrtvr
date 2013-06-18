@@ -4,7 +4,8 @@
 # Log confidence
 # Set debug log from envvar
 #Fix raw/flac file  dir + cleanup
-#
+#Fix mesage bus types for level + cutter
+# 
 import sys, os, time, subprocess, signal
 import gobject
 import dbus
@@ -52,20 +53,38 @@ class EncoderParent(object):
 	
 	
 class GapTimer(object):
-    MIN_TIME = 10.0
-    MAX_TIME = 10.0
+    MAX_TIME = 20.0
+    MAX_WORDS = 1
     
     def __init__(self, feeder):
 	self.feeder = feeder
 	self.last_gap = time.time()
+	self.word_count = 0
 
-    def level_msg(self, level):
-	peak = level['peak'][0]
+    def event(self, msg):
 	now = time.time()
-	delta = now - self.last_gap
-	if delta > self.MAX_TIME:
-	    self.feeder.flush()
-	    self.last_gap = now
+	if msg.has_key('above'):
+	    if msg['above']:
+		# Above silence threshold
+		self.word_count += 1
+		print self.word_count
+	    else:
+		# In silence
+		print 'o'
+		if self.word_count >=self.MAX_WORDS:
+		    print 'x'
+		    log.debug('flush words: %d', self.word_count)
+		    self.flush(now)
+	else:
+	    delta = now - self.last_gap
+	    if delta > self.MAX_TIME:
+		log.debug('flush timeout')
+		self.flush(now)
+		
+    def flush(self, now):
+	self.feeder.flush()
+	self.word_count = 0
+	self.last_gap = now
     
 	
 
@@ -101,7 +120,7 @@ class Feed(object):
 	    prop_arg, feed = PIPELINES[feed_type]
 	except KeyError, e:
 	    raise KeyError('Unknown feed_type: %s in stream: %s' % (feed_type, name))
-	p = '%s ! audioconvert ! %s ! level name=el_level message=true interval=1000000000 ! fdsink   name=el_sink' %  (feed, RAW_AUDIO_CAP)
+	p = '%s ! audioconvert ! %s ! level name=el_level message=true interval=1000000000 ! cutter ! fdsink   name=el_sink' %  (feed, RAW_AUDIO_CAP)
 	log.debug('pipeline: %s', p)
         self.feeder = gst.parse_launch(p)
 	self.el_feed = self.feeder.get_by_name('el_feed')
@@ -125,7 +144,9 @@ class Feed(object):
 		sys.exit(0)
 	elif message.type == gst.MESSAGE_ELEMENT:
 	    if message.structure.has_key('peak'):
-		self.gap_timer.level_msg(message.structure)
+		self.gap_timer.event(message.structure)
+	    elif message.structure.has_key('above'):
+		self.gap_timer.event(message.structure)
 	else:
 	    log.debug( 'bus: %s/%s', message.type, message)
 	return gst.BUS_PASS

@@ -150,3 +150,25 @@ At least one output file must be specified
 
 tmp/x.wav: RIFF (little-endian) data, WAVE audio, Microsoft PCM, 32 bit, mono 16000 Hz
 1
+
+
+
+Bins
+----
+If you want to add bins to your pipeline, you can do so by specifying 
+  <bintype> . ( <properties> <elements> )
+in your pipeline. This adds a bin to your pipeline and puts all elements that
+are specified between the brackets inside this bin. You can specify properties
+of the bin directly after the opening bracket.
+There are to special bins: if you don't specify a bintype and no dot either, the
+type of the bin defaults to "bin". And you can use curly brackets { } to get a 
+bin of type "thread".
+  example:#> gst-launch \( { fakesrc pipeline . \( fakesink \) } \)
+This will put a fakesrc element inside a thread inside a bin and a fakesink into
+a pipeline element inside the thread inside the bin.
+Please note that this pipeline would not work, even if the elements were 
+connected properly, because the pipeline only specifies one top level element, 
+the element is not put inside a pipeline but returned directly. So if you don't
+want your elements be put into a pipeline, just add a bin of whatever type you 
+wish around the pipeline.
+

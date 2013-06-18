@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os, logging, urllib2, json
+import sys, os, logging, urllib2, json, time
 
 logging.basicConfig()
 log = logging.getLogger('vrs')
@@ -19,7 +19,7 @@ def main():
 	    header = {'Content-Type' : 'audio/x-flac; rate=16000'}
 	    try:
 		req = urllib2.Request(url, flac, header)
-		print 'vrs send'
+		# print 'vrs send'
 		data = json.loads(urllib2.urlopen(req).read()                                                              )
 		log.debug('vr data: %s', data)
 		if data['status'] == 0:

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # TODO:
 # Add silence detect level message=true interval=5000000000
-# Find out why big pauses - add print when sending down each pipe
-# Get mic working
 # Log confidence
 # Set debug log from envvar
 #Fix raw/flac file  dir + cleanup
@@ -47,9 +45,10 @@ class EncoderParent(object):
 	log.debug('spawned encoder: %s. fd: %s', self.p, self.fd)
 
     def signal(self):
+	# # print 1, 'feed signalling'
 	self.p.stdin.flush()
 	self.p.send_signal(signal.SIGUSR1)
-	print 'feed signalled'
+	#print 2, 'feed signalled'
 	
 	
 class GapTimer(object):

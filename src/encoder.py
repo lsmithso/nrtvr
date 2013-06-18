@@ -5,11 +5,10 @@ import glib
 import pygst
 pygst.require("0.10")
 import gst
-import feed
+import feed, utils
 
-logging.basicConfig()
-log = logging.getLogger('enc')
-log.setLevel(logging.INFO)
+log = utils.setup_logger('enc')
+
 
 FLAC_TEST = False
 
@@ -49,17 +48,8 @@ class FlacEncode(object):
 	
     def _on_message(self, bus, message):
 	if message.type == gst.MESSAGE_STATE_CHANGED:
-	    states = message.structure
-	    smap = {
-		gst.STATE_NULL : 'null',
-		gst.STATE_READY : 'ready',
-		gst.STATE_PLAYING : 'playing',
-		gst.STATE_PAUSED : 'paused',
-		gst.STATE_VOID_PENDING : 'void',
-		}
-	    def x(s): return smap.get(s, s)
-	    log.debug('state: %s-%s/%s/%s', message.src.get_name(), x(states['old-state']), x(states['new-state']), x(states['pending-state']))
-	if message.type == gst.MESSAGE_EOS:
+	    utils.log_gst_state(log, message)
+	elif message.type == gst.MESSAGE_EOS:
 	    log.debug('flac encode finished %s', message.src.get_name())
 	    self.pipeline.set_state(gst.STATE_READY)
 	    self.vrs.vrs_send(self.encoded_filename)

@@ -15,10 +15,10 @@ import pygst
 pygst.require("0.10")
 import gst
 import logging
+import utils
 
-logging.basicConfig()
-log = logging.getLogger('feed')
-log.setLevel(logging.INFO)
+log = utils.setup_logger('feed')
+
 
 S_NAME = "uk.co.opennet.nrtvr-service"
 #RAW_AUDIO_CAP = 'audio/x-raw-int,rate=16000,channels=1,endianness=1234,width=32 ,depth=1,signed=true'
@@ -119,16 +119,7 @@ class Feed(object):
 
     def _on_message(self, bus, message):
 	if message.type == gst.MESSAGE_STATE_CHANGED:
-	    states = message.structure
-	    smap = {
-		gst.STATE_NULL : 'null',
-		gst.STATE_READY : 'ready',
-		gst.STATE_PLAYING : 'playing',
-		gst.STATE_PAUSED : 'paused',
-		gst.STATE_VOID_PENDING : 'void',
-		}
-	    def x(s): return smap.get(s, s)
-	    log.debug('state: %s-%s/%s/%s', message.src.get_name(), x(states['old-state']), x(states['new-state']), x(states['pending-state']))
+	    utils.log_gst_state(log, message)
 	elif message.type == gst.MESSAGE_EOS:
 	    if self.terminating:
 		sys.exit(0)

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import sys, os, logging, urllib2, json, time
+import utils
 
-logging.basicConfig()
-log = logging.getLogger('vrs')
-log.setLevel(logging.INFO)
+log = utils.setup_logger('vrs')
+
 
 
 def main():

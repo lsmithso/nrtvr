@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # TODO:
-# Add silence detect level message=true interval=5000000000
 # Log confidence
-# Set debug log from envvar
 #Fix raw/flac file  dir + cleanup
 #Fix mesage bus types for level + cutter
-# 
+# Rework fgap timer to measure timout after silence starts
+#  - flag in noise/silecne. If timeout, and in noise, submit.
 import sys, os, time, subprocess, signal
 import gobject
 import dbus
@@ -53,13 +52,14 @@ class EncoderParent(object):
 	
 	
 class GapTimer(object):
-    MAX_TIME = 20.0
+    MAX_TIME = 5.0
     MAX_WORDS = 1
     
     def __init__(self, feeder):
 	self.feeder = feeder
 	self.last_gap = time.time()
 	self.word_count = 0
+	self.signal_latch = False
 
     def event(self, msg):
 	now = time.time()
@@ -67,24 +67,27 @@ class GapTimer(object):
 	    if msg['above']:
 		# Above silence threshold
 		self.word_count += 1
-		print self.word_count
+		self.signal_latch = True
 	    else:
 		# In silence
-		print 'o'
 		if self.word_count >=self.MAX_WORDS:
-		    print 'x'
 		    log.debug('flush words: %d', self.word_count)
 		    self.flush(now)
 	else:
 	    delta = now - self.last_gap
 	    if delta > self.MAX_TIME:
-		log.debug('flush timeout')
-		self.flush(now)
+		if self.signal_latch:
+		    log.debug('flush timeout')
+		    self.flush(now)
+		else:
+		    self.last_gap = now
+
 		
     def flush(self, now):
 	self.feeder.flush()
 	self.word_count = 0
 	self.last_gap = now
+	self.signal_latch = False
     
 	
 

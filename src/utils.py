@@ -3,6 +3,9 @@ import pygst
 pygst.require("0.10")
 import gst
 
+DEFAULT_RIP_DIR = '/var/tmp/nrtvr_rip'
+
+
 def setup_logger(whom):
     logging.basicConfig()
     log = logging.getLogger(whom)
@@ -26,5 +29,6 @@ def log_gst_state(log, message):
 	    }
 	def x(s): return smap.get(s, s)
 	log.debug('state: %s-%s/%s/%s', message.src.get_name(), x(states['old-state']), x(states['new-state']), x(states['pending-state']))
+
 
 

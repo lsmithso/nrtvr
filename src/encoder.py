@@ -15,16 +15,21 @@ FLAC_TEST = False
 
 class FileName(object):
     def __init__(self, dir_name):
-	self.dir_name = dir
+	self.dir_name = dir_name
+	if not os.path.exists(dir_name):
+	    os.makedirs(dir_name)
 	self.index = 0
 	self.fname = None
 
     def next(self):
-	self.fname = 'rip_%04d.wav' % self.index
+	self.fname = os.path.join(self.dir_name, 'rip_%04d.raw' % self.index)
 	self.index += 1
 	return self.fname
 
-
+    @staticmethod
+    def encoded_name(name):
+	f = os.path.splitext(name)[0]
+	return f + '.flac'
 
 
 class FlacEncode(object):
@@ -40,8 +45,10 @@ class FlacEncode(object):
 
     def encode(self, name):
 	log.debug('new encode %s', name)
+	self.raw_name = name
 	self.el_src.set_property('location', name)
-	self.encoded_filename =  name + '.flac' # FIXME
+	self.encoded_filename = FileName.encoded_name(name)
+	log.debug('encoded filename: %r', self.encoded_filename)
 	self.el_sink.set_property('location', self.encoded_filename)
 	self.pipeline.set_state(gst.STATE_PLAYING)
 
@@ -52,6 +59,8 @@ class FlacEncode(object):
 	elif message.type == gst.MESSAGE_EOS:
 	    log.debug('flac encode finished %s', message.src.get_name())
 	    self.pipeline.set_state(gst.STATE_READY)
+	    if 1:
+		os.unlink(self.raw_name)
 	    self.vrs.vrs_send(self.encoded_filename)
 	    if FLAC_TEST: 
 		sys.exit(0)
@@ -66,7 +75,7 @@ class Encoder(object):
     def __init__(self):
 	self.vrs_spawn()
 	self.flac = FlacEncode(self)
-	self.file_namer =FileName('/tmp')
+	self.file_namer =FileName(utils.DEFAULT_RIP_DIR)
 	self.fd = open(self.file_namer.next(), 'wb')
 	signal.signal(signal.SIGUSR1, self.signal_handler)
 	    

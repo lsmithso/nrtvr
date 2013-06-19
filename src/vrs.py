@@ -31,6 +31,10 @@ def main():
 		    print '<%d>' % data['status']
 	    except urllib2.HTTPError, e:
 		log.error('url error: %s',  e)
+	    finally:
+		if 0:
+		    os.unlink(fname)
+		
 	else:
 	    return
 

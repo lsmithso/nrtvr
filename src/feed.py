@@ -3,8 +3,9 @@
 # Log confidence
 #Fix raw/flac file  dir + cleanup
 #Fix mesage bus types for level + cutter
-# Rework fgap timer to measure timout after silence starts
-#  - flag in noise/silecne. If timeout, and in noise, submit.
+# Tune up pipeline settings, vox filters, cutter etc
+# main fn.
+# skype
 import sys, os, time, subprocess, signal
 import gobject
 import dbus
@@ -26,6 +27,9 @@ RAW_AUDIO_CAP = 'audio/x-raw-int,rate=16000,channels=1,width=32,signed=true,endi
 STREAMS = {
     'r4' : ('mms', 'mms://wmlive-acl.bbc.co.uk/wms/bbc_ami/radio4/radio4_bb_live_eq1_sl1?BBC-UID=743f7d2b70f86c6814c7231b812545a243f9ae4c10900184a4dfd476c840ce2a&amp;SSO2-UID='),
     'mic' : ('parec', '3'),
+    'mon' : ('parec', '2'),
+    'skype' : ('parec', '5'),
+
     }
 
 PIPELINES = {
@@ -123,7 +127,7 @@ class Feed(object):
 	    prop_arg, feed = PIPELINES[feed_type]
 	except KeyError, e:
 	    raise KeyError('Unknown feed_type: %s in stream: %s' % (feed_type, name))
-	p = '%s ! audioconvert ! %s ! level name=el_level message=true interval=1000000000 ! cutter ! fdsink   name=el_sink' %  (feed, RAW_AUDIO_CAP)
+	p = '%s ! audioconvert ! %s ! level name=el_level message=true interval=1000000000 ! cutter run-length=400000000 ! fdsink   name=el_sink' %  (feed, RAW_AUDIO_CAP)
 	log.debug('pipeline: %s', p)
         self.feeder = gst.parse_launch(p)
 	self.el_feed = self.feeder.get_by_name('el_feed')

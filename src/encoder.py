@@ -59,7 +59,7 @@ class FlacEncode(object):
 	elif message.type == gst.MESSAGE_EOS:
 	    log.debug('flac encode finished %s', message.src.get_name())
 	    self.pipeline.set_state(gst.STATE_READY)
-	    if 1:
+	    if 0:
 		os.unlink(self.raw_name)
 	    self.vrs.vrs_send(self.encoded_filename)
 	    if FLAC_TEST: 

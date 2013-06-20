@@ -1,0 +1,1 @@
+gst-launch filesrc location=b.raw ! audio/x-raw-int,rate=16000,channels=1,width=32,signed=true,endianness=1234,width=8 ! flacenc ! filesink location=b.flac

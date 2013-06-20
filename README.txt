@@ -172,3 +172,9 @@ the element is not put inside a pipeline but returned directly. So if you don't
 want your elements be put into a pipeline, just add a bin of whatever type you 
 wish around the pipeline.
 
+
+
+skuype monitoring
+load-module module-null-sink sink_ss=name
+
+load-module module-combine sink_name=ssc slaves="ss,alsa_output.usb-Logitech_Logitech_Wireless_Headset_000d44b20735-00-Headset.analog-stereo"

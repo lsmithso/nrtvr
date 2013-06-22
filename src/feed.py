@@ -6,6 +6,7 @@
 # Tune up pipeline settings, vox filters, cutter etc
 # main fn.
 # skype
+# vader replacement for cutter?
 import sys, os, time, subprocess, signal
 import gobject
 import dbus

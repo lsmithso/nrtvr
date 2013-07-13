@@ -178,3 +178,13 @@ skuype monitoring
 load-module module-null-sink sink_ss=name
 
 load-module module-combine sink_name=ssc slaves="ss,alsa_output.usb-Logitech_Logitech_Wireless_Headset_000d44b20735-00-Headset.analog-stereo"
+
+skype mic routing
+add null_sink ssmic id =3
+Source = 5
+source-output = 4
+move-source-output 4 5
+(index of source-output to index of source)
+Need to fix stfuc to add source print/move
+
+

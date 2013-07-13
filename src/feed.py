@@ -7,6 +7,8 @@
 # main fn.
 # skype
 # vader replacement for cutter?
+# Add filesrc
+# Add optional command line arg to streams input
 import sys, os, time, subprocess, signal
 import gobject
 import dbus
